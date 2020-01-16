@@ -1,0 +1,19 @@
+type Query {
+    viewer: User
+}
+
+type User {
+    id: ID!
+    lists: [List!]!
+}
+
+type List {
+    id: ID!
+    name: String!
+    tasks: [Task!]!
+}
+
+type Task {
+    name: String!
+    done: Boolean!
+}
