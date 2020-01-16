@@ -1,0 +1,8 @@
+{
+  "name": "makeitso-prettier-config",
+  "version": "0.1.0",
+  "description": "Prettier config for makeitso",
+  "main": "index.js",
+  "author": "Arturs Vonda <arturs@artursvonda.lv>",
+  "license": "MIT"
+}

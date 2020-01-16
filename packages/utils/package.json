@@ -1,0 +1,19 @@
+{
+    "name": "utils",
+    "version": "0.1.0",
+    "description": "Misc utils",
+    "main": "dist/index.js",
+    "author": "Arturs Vonda <arturs@artursvonda.lv>",
+    "license": "MIT",
+    "private": true,
+    "files": [
+        "dist/**/*"
+    ],
+    "scripts": {
+        "build": "tsc"
+    },
+    "devDependencies": {
+        "typescript": "~3.7.0"
+    },
+    "prettier": "makeitso-prettier-config"
+}
