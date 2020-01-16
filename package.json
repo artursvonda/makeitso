@@ -8,7 +8,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "test": "jest"
+    "test": "yarn lerna run test"
   },
   "engines": {
     "node": ">= 10"
