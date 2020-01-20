@@ -19,7 +19,7 @@ export const builder: BuilderCallback<Arguments, {}> = yargs => {
 export const handler = async (argv: Arguments) => {
     const input = resolve(process.cwd(), argv.input);
     try {
-        await build({ input });
+        await build({ schemaFile: input });
 
         process.exit(0);
     } catch {

@@ -11,6 +11,7 @@ import {
     TypeDefinitionNode,
 } from 'graphql';
 import { TypeNode } from 'graphql/language/ast';
+import { map } from 'utils/dist/object';
 
 const debug = initDebug('makeitso: build');
 
@@ -109,7 +110,7 @@ const _getStructure = (definition: ObjectTypeDefinitionNode, context: Context): 
             ([] as [string, Field][]),
     );
 
-const getDefinitions = <T extends TypeDefinitionNode>(doc: DocumentNode, kind: string) =>
+const getDefinitions = <T extends TypeDefinitionNode>(doc: DocumentNode, kind: T['kind']) =>
     Object.fromEntries(
         doc.definitions
             .filter((definition): definition is T => definition.kind === kind)
@@ -125,30 +126,30 @@ export const getStructure = (body: string) => {
 
     const context = { scalars, enums };
 
-    const types = Object.fromEntries(
-        doc.definitions
-            .filter(
-                (definition): definition is ObjectTypeDefinitionNode =>
-                    definition.kind === 'ObjectTypeDefinition',
-            )
-            .map(definition => [definition.name.value, _getStructure(definition, context)]),
+    const objects = map(
+        getDefinitions<ObjectTypeDefinitionNode>(doc, 'ObjectTypeDefinition'),
+        definition => _getStructure(definition, context),
     );
 
-    if (!types.Query) {
+    if (!objects.Query) {
         debug('Missing root');
 
         throw new Error('Missing Query type in schema');
     }
 
-    Object.values(types).forEach(structure => {
+    Object.values(objects).forEach(structure => {
         Object.values(structure).forEach(field => {
-            if (field.resolvedType === 'array' && types[field.children.type]) {
-                (field.children as ObjectField).children = types[field.children.type];
-            } else if (types[field.type]) {
-                (field as ObjectField).children = types[field.type];
+            if (
+                field.resolvedType === 'array' &&
+                field.children.resolvedType === 'object' &&
+                objects[field.children.type]
+            ) {
+                field.children.children = objects[field.children.type];
+            } else if (field.resolvedType === 'object' && objects[field.type]) {
+                field.children = objects[field.type];
             }
         });
     });
 
-    return types.Query;
+    return objects.Query;
 };

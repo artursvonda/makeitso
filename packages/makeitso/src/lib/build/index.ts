@@ -1,14 +1,14 @@
 import { promises } from 'fs';
-import { getStructure } from '../graphql';
+import { getStructure } from '../graphql/utils';
 
 const { readFile } = promises;
 
 interface Arguments {
-    input: string;
+    schemaFile: string;
 }
 
-const build = async ({ input }: Arguments) => {
-    const body = await readFile(input);
+const build = async ({ schemaFile }: Arguments) => {
+    const body = await readFile(schemaFile);
 
     const structure = getStructure(body.toString());
 
