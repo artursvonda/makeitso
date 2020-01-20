@@ -25,6 +25,7 @@
         "makeitso-cli": "*",
         "prettier": "^1.19.1",
         "relay-compiler": "^8.0.0",
+        "relay-compiler-language-typescript": "^10.1.4",
         "relay-config": "^8.0.0",
         "typescript": "~3.7.2"
     },
@@ -33,7 +34,7 @@
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject",
-        "relay": "relay-compiler --src ./src --schema ./data/schema.graphql --extensions js jsx ts tsx",
+        "relay": "relay-compiler --src ./src --schema ./data/schema.graphql --extensions js jsx ts tsx --language typescript",
         "server": "yarn makeitso"
     },
     "eslintConfig": {

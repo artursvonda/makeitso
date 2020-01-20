@@ -1,11 +1,10 @@
 import React, { FC } from 'react';
-import { createFragmentContainer, graphql } from 'react-relay';
+import { createFragmentContainer } from 'react-relay';
+import graphql from 'babel-plugin-relay/macro';
+import { Task_task } from './__generated__/Task_task.graphql';
 
 interface Props {
-    task: {
-        name: string;
-        done: boolean;
-    };
+    task: Task_task;
 }
 
 const Task: FC<Props> = ({ task: { name, done } }) => (
@@ -14,11 +13,11 @@ const Task: FC<Props> = ({ task: { name, done } }) => (
     </div>
 );
 
-const task = graphql`
-    fragment Task_task on Task {
-        name
-        done
-    }
-`;
-
-export default createFragmentContainer(Task, { task });
+export default createFragmentContainer(Task, {
+    task: graphql`
+        fragment Task_task on Task {
+            name
+            done
+        }
+    `,
+});

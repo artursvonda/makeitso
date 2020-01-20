@@ -1,34 +1,29 @@
-import React from 'react';
-import { graphql, QueryRenderer } from 'react-relay';
-import environment from '../../lib/graphql-env';
+import graphql from 'babel-plugin-relay/macro';
+import React, { FC } from 'react';
+import { createFragmentContainer } from 'react-relay';
 import Task from '../Task';
+import { List_list } from './__generated__/List_list.graphql';
 
-const query = graphql`
-    query ListsListQuery {
-        # The root field for the query
-        viewer {
-            # A reference to your fragment container
-            ...Task_task
-        }
-    }
-`;
+interface Props {
+    list: List_list;
+}
 
-// You can usually have use one query renderer per page
-// and it represents the root of a query
-const Lists = () => (
-    <QueryRenderer
-        environment={environment}
-        query={query}
-        variables={{}}
-        render={({ error, props }) => {
-            if (error) {
-                return <div>{error.message}</div>;
-            } else if (props) {
-                return <Task task={props.task} />;
-            }
-            return <div>Loading</div>;
-        }}
-    />
+const List: FC<Props> = ({ list: { name, tasks } }) => (
+    <div>
+        <h2>{name}</h2>
+        {tasks.map(task => (
+            <Task task={task} />
+        ))}
+    </div>
 );
 
-export default Lists;
+export default createFragmentContainer(List, {
+    list: graphql`
+        fragment List_list on List {
+            name
+            tasks {
+                ...Task_task
+            }
+        }
+    `,
+});

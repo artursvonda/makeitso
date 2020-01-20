@@ -2,7 +2,7 @@ import { Environment, Network, RecordSource, Store } from 'relay-runtime';
 
 const environment = new Environment({
     network: Network.create((operation, variables) =>
-        fetch('/graphql', {
+        fetch('http://localhost:4000/graphql', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
