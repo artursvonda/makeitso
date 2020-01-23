@@ -1,26 +1,8 @@
-import { getGraphQlType, getStructure } from './index';
+import { getGraphQlType, getStructure, ObjectField } from './index';
 
 describe('getStructure', () => {
-    it('requires root query', () => {
+    it('requires valid graphql schema', () => {
         expect(() => getStructure('')).toThrow('Syntax Error: Unexpected <EOF>');
-        expect(() => getStructure('type NotQuery { field: String }')).toThrow(
-            'Missing Query type in schema',
-        );
-    });
-
-    it('requires at least one field in query', () => {
-        expect(() => getStructure('type Query {}')).toThrow('Syntax Error: Expected Name, found }');
-    });
-
-    it('requires at least one field in query', () => {
-        expect(
-            Object.keys(
-                getStructure(`
-                    type Query {
-                        field: String!
-                    }`),
-            ),
-        ).toMatchObject(['field']);
     });
 
     it('returns basic types', () => {
@@ -33,10 +15,14 @@ describe('getStructure', () => {
                         bool: Boolean!
                     }`),
         ).toMatchObject({
-            string: { type: 'String', resolvedType: 'string', required: true },
-            int: { type: 'Int', resolvedType: 'int', required: true },
-            float: { type: 'Float', resolvedType: 'float', required: true },
-            bool: { type: 'Boolean', resolvedType: 'bool', required: true },
+            Query: {
+                fields: {
+                    string: { type: 'String', resolvedType: 'string', required: true },
+                    int: { type: 'Int', resolvedType: 'int', required: true },
+                    float: { type: 'Float', resolvedType: 'float', required: true },
+                    bool: { type: 'Boolean', resolvedType: 'bool', required: true },
+                },
+            },
         });
     });
 
@@ -46,7 +32,11 @@ describe('getStructure', () => {
                     type Query {
                         string: String
                     }`),
-        ).toMatchObject({ string: { type: 'String', resolvedType: 'string', required: false } });
+        ).toMatchObject({
+            Query: {
+                fields: { string: { type: 'String', resolvedType: 'string', required: false } },
+            },
+        });
     });
 
     it('handles scalar values', () => {
@@ -58,7 +48,11 @@ describe('getStructure', () => {
                         string: ScalarType
                     }`),
         ).toMatchObject({
-            string: { type: 'ScalarType', resolvedType: 'unknown', required: false },
+            Query: {
+                fields: {
+                    string: { type: 'ScalarType', resolvedType: 'unknown', required: false },
+                },
+            },
         });
     });
 
@@ -74,11 +68,15 @@ describe('getStructure', () => {
                         string: EnumValue
                     }`),
         ).toMatchObject({
-            string: {
-                type: 'EnumValue',
-                resolvedType: 'enum',
-                required: false,
-                children: ['One', 'Two'],
+            Query: {
+                fields: {
+                    string: {
+                        type: 'EnumValue',
+                        resolvedType: 'enum',
+                        required: false,
+                        children: ['One', 'Two'],
+                    },
+                },
             },
         });
     });
@@ -90,11 +88,15 @@ describe('getStructure', () => {
                         string: [String]
                     }`),
         ).toMatchObject({
-            string: {
-                type: 'ListType',
-                resolvedType: 'array',
-                required: false,
-                children: { type: 'String', resolvedType: 'string', required: false },
+            Query: {
+                fields: {
+                    string: {
+                        type: 'ListType',
+                        resolvedType: 'array',
+                        required: false,
+                        children: { type: 'String', resolvedType: 'string', required: false },
+                    },
+                },
             },
         });
 
@@ -104,11 +106,15 @@ describe('getStructure', () => {
                         string: [String!]!
                     }`),
         ).toMatchObject({
-            string: {
-                type: 'ListType',
-                resolvedType: 'array',
-                required: true,
-                children: { type: 'String', resolvedType: 'string', required: true },
+            Query: {
+                fields: {
+                    string: {
+                        type: 'ListType',
+                        resolvedType: 'array',
+                        required: true,
+                        children: { type: 'String', resolvedType: 'string', required: true },
+                    },
+                },
             },
         });
     });
@@ -124,12 +130,24 @@ describe('getStructure', () => {
                         nested: Nested!
                     }`),
         ).toMatchObject({
-            nested: {
-                type: 'Nested',
-                resolvedType: 'object',
-                required: true,
-                children: {
+            Nested: {
+                fields: {
                     string: { type: 'String', resolvedType: 'string', required: true },
+                },
+            },
+            Query: {
+                fields: {
+                    nested: {
+                        type: 'Nested',
+                        resolvedType: 'object',
+                        required: true,
+                        children: {
+                            type: 'Nested',
+                            fields: {
+                                string: { type: 'String', resolvedType: 'string', required: true },
+                            },
+                        },
+                    },
                 },
             },
         });
@@ -140,9 +158,15 @@ describe('getStructure', () => {
             type: 'Child',
             resolvedType: 'object',
             required: true,
-            children: {} as { [key: string]: unknown },
+            children: {} as any,
         };
-        child.children.child = child;
+
+        const Child = {
+            type: 'Child',
+            fields: { child },
+        };
+
+        child.children = Child;
 
         const structure = getStructure(`
                 type Child {
@@ -152,8 +176,10 @@ describe('getStructure', () => {
                 type Query {
                     child: Child!
                 }`);
-        expect(structure).toMatchObject({ child });
-        expect((structure.child as any).children).toMatchObject({ child });
+        // For some reason doesn't match when both Child and Query are present in object
+        expect(structure).toMatchObject({ Child });
+        expect(structure).toMatchObject({ Query: { ...Child, type: 'Query' } });
+        expect((structure.Query.fields.child as ObjectField).children).toMatchObject(Child);
     });
 });
 

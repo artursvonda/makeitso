@@ -34,7 +34,7 @@ Server: {green http://${host}:${port}/grqphql}`;
 
     const structure = getStructure(schemaInput);
 
-    const root = getResolver(structure, { resolversDir });
+    const root = await getResolver(structure, { resolversDir });
 
     const app = express();
     app.use(cors());

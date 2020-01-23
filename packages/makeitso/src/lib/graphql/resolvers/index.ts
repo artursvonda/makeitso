@@ -1,16 +1,35 @@
-import { map } from 'utils/dist';
+import * as path from 'path';
+import { map } from 'utils/dist/object';
 import uuid from 'uuid';
-import { Field, Structure } from '../utils';
+import { Field, ObjectField, Fields, Structure } from '../utils';
 
 type ScalarValue = string | number | boolean;
 type ResolvedValue = ScalarValue | ScalarValue[] | Resolver | Resolver[] | ObjectResolver | null;
 type Resolver = () => ResolvedValue;
 type ObjectResolver = { [key: string]: Resolver };
 
-const getFieldMock = (field: Field, context: Context): Resolver => {
+const getTypeModule = (type: string, dir: string) =>
+    import(path.relative(__dirname, path.resolve(dir, type)));
+
+const getTypeResolver = async (field: ObjectField, context: Context) => {
+    const resolver = await getObjectResolver(field.children.fields, context);
+    try {
+        const module = await getTypeModule(field.type, context.resolversDir);
+
+        if ('resolve' in module) {
+            return () => module.resolve(resolver, dbData);
+        }
+    } catch {}
+
+    return () => resolver;
+};
+
+const getFieldMock = async (field: Field, context: Context): Promise<Resolver> => {
     switch (field.resolvedType) {
         case 'string':
-            return () => (field.type === 'ID' ? uuid.v4() : 'string value');
+            const val = field.type === 'ID' ? uuid.v4() : 'string value';
+
+            return () => val;
         case 'int':
             return () => 123;
         case 'float':
@@ -20,9 +39,11 @@ const getFieldMock = (field: Field, context: Context): Resolver => {
         case 'enum':
             return () => field.children[0];
         case 'object':
-            return () => getResolver(field.children, context);
+            return getTypeResolver(field, context);
         case 'array':
-            return () => [getFieldMock(field.children, context)() as string];
+            const mockField = await getFieldMock(field.children, context);
+
+            return () => [mockField() as string];
         case 'unknown':
         default:
             return () => {
@@ -35,5 +56,53 @@ interface Context {
     resolversDir: string;
 }
 
-export const getResolver = (obj: Structure, context: Context): ObjectResolver =>
-    map(obj, field => getFieldMock(field, context));
+const getObjectResolver = async (obj: Fields, context: Context): Promise<ObjectResolver> => {
+    const resolvers = await Promise.all(
+        Object.entries(obj).map(async ([key, field]) => {
+            const mock = await getFieldMock(field, context);
+
+            return [key, mock];
+        }),
+    );
+
+    return Object.fromEntries(resolvers);
+};
+
+const dbData: { [key: string]: unknown[] } = {};
+const db = {
+    add(type: string, value: unknown) {
+        dbData[type].push(value);
+    },
+};
+
+const getMutations = async (structure: Structure, context: Context): Promise<ObjectResolver> => {
+    const types = Object.keys(structure);
+    const mutations = await Promise.all(
+        types.map(async type => {
+            try {
+                const module = await getTypeModule(type, context.resolversDir);
+
+                if ('mutations' in module) {
+                    return map(module.mutations, fn => (input: unknown) => fn(db, input));
+                }
+            } catch {}
+
+            return {};
+        }),
+    );
+    Object.assign(dbData, ...types.map(type => ({ [type]: [] })));
+
+    return Object.assign({}, ...mutations);
+};
+
+export const getResolver = async (
+    structure: Structure,
+    context: Context,
+): Promise<ObjectResolver> => {
+    const [resolvers, mutations] = await Promise.all([
+        getObjectResolver(structure.Query.fields, context),
+        getMutations(structure, context),
+    ]);
+
+    return { ...resolvers, ...mutations };
+};

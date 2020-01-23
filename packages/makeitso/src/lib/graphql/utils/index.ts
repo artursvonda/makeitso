@@ -1,4 +1,3 @@
-import initDebug from 'debug';
 import {
     DocumentNode,
     EnumTypeDefinitionNode,
@@ -13,9 +12,7 @@ import {
 import { TypeNode } from 'graphql/language/ast';
 import { map } from 'utils/dist/object';
 
-const debug = initDebug('makeitso: build');
-
-export interface Structure {
+export interface Fields {
     [key: string]: Field;
 }
 
@@ -47,10 +44,17 @@ export interface ArrayField extends FieldBase {
 
 export interface ObjectField extends FieldBase {
     resolvedType: 'object';
-    children: Structure;
+    children: Object;
 }
 
 export type Field = ScalarField | CustomScalarField | EnumField | ArrayField | ObjectField;
+
+export type Object = {
+    type: string;
+    fields: Fields;
+};
+
+export type Structure = Record<string, Object>;
 
 type TypeMap = typeof typeMap & { [key: string]: never };
 
@@ -94,7 +98,7 @@ const getFieldStructure = (field: FieldDefinitionNode | ListTypeNode, context: C
             children: context.enums[type].values?.map(value => value.name.value) ?? [],
         };
     } else if (resolvedType === 'object') {
-        return { resolvedType, type, required, children: {} };
+        return { resolvedType, type, required, children: {} as any };
     } else {
         return { resolvedType, type, required };
     }
@@ -104,11 +108,13 @@ type Scalars = { [key: string]: ScalarTypeDefinitionNode };
 type Enums = { [key: string]: EnumTypeDefinitionNode };
 type Context = { scalars: Scalars; enums: Enums };
 
-const _getStructure = (definition: ObjectTypeDefinitionNode, context: Context): Structure =>
-    Object.fromEntries(
+const _getStructure = (definition: ObjectTypeDefinitionNode, context: Context): Object => ({
+    type: definition.name.value,
+    fields: Object.fromEntries(
         definition.fields?.map(field => [field.name.value, getFieldStructure(field, context)]) ??
-            ([] as [string, Field][]),
-    );
+            ([] as [string, Object][]),
+    ),
+});
 
 const getDefinitions = <T extends TypeDefinitionNode>(doc: DocumentNode, kind: T['kind']) =>
     Object.fromEntries(
@@ -117,7 +123,7 @@ const getDefinitions = <T extends TypeDefinitionNode>(doc: DocumentNode, kind: T
             .map(definition => [definition.name.value, definition]),
     );
 
-export const getStructure = (body: string) => {
+export const getStructure = (body: string): Structure => {
     const source = new Source(body.toString());
     const doc = parse(source);
 
@@ -131,14 +137,8 @@ export const getStructure = (body: string) => {
         definition => _getStructure(definition, context),
     );
 
-    if (!objects.Query) {
-        debug('Missing root');
-
-        throw new Error('Missing Query type in schema');
-    }
-
     Object.values(objects).forEach(structure => {
-        Object.values(structure).forEach(field => {
+        Object.values(structure.fields).forEach(field => {
             if (
                 field.resolvedType === 'array' &&
                 field.children.resolvedType === 'object' &&
@@ -151,5 +151,5 @@ export const getStructure = (body: string) => {
         });
     });
 
-    return objects.Query;
+    return objects;
 };
