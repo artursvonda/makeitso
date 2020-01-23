@@ -22,5 +22,10 @@
       "packages/*",
       "examples/*"
     ]
+  },
+  "resolutions": {
+    "@babel/core": "^7.0.0",
+    "babel-jest": "^25.0.0",
+    "jest": "^25.0.0"
   }
 }
