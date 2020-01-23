@@ -12,7 +12,7 @@ const List: FC<Props> = ({ list: { name, tasks } }) => (
     <div>
         <h2>{name}</h2>
         {tasks.map(task => (
-            <Task task={task} />
+            <Task key={task.id} task={task} />
         ))}
     </div>
 );
@@ -22,6 +22,7 @@ export default createFragmentContainer(List, {
         fragment List_list on List {
             name
             tasks {
+                id
                 ...Task_task
             }
         }

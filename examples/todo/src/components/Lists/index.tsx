@@ -10,6 +10,7 @@ const query = graphql`
         # The root field for the query
         viewer {
             lists {
+                id
                 ...List_list
             }
         }
@@ -29,13 +30,7 @@ const Lists = () => (
 
                 return <div>Err: {error.message}</div>;
             } else if (props && props.viewer) {
-                return (
-                    <>
-                        {props.viewer.lists.map(list => (
-                            <List list={list} />
-                        ))}
-                    </>
-                );
+                return props.viewer.lists.map(list => <List key={list.id} list={list} />);
             }
 
             return <div>Loading</div>;
