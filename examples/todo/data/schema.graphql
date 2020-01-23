@@ -2,11 +2,16 @@ type Query {
     viewer: User
 }
 
+type Mutation {
+    addTask(task: AddTaskInput!): Task!
+}
+
 type User {
     id: ID!
     lists: [List!]!
 }
 
+# Description?
 type List {
     id: ID!
     name: String!
@@ -14,6 +19,11 @@ type List {
 }
 
 type Task {
+    id: ID!
     name: String!
     done: Boolean!
+}
+
+input AddTaskInput {
+    name: String!
 }
