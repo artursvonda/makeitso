@@ -1,16 +1,20 @@
 /* tslint:disable */
 /* eslint-disable */
-/* @relayHash fba76c9526876044d64533006ebbe489 */
+/* @relayHash eb81e7d0641990b110bd646e09d6498c */
 
 import { ConcreteRequest } from 'relay-runtime';
 import { FragmentRefs } from 'relay-runtime';
 export type ListsListQueryVariables = {};
 export type ListsListQueryResponse = {
     readonly viewer: {
-        readonly lists: ReadonlyArray<{
-            readonly id: string;
-            readonly ' $fragmentRefs': FragmentRefs<'List_list'>;
-        }>;
+        readonly lists: {
+            readonly edges: ReadonlyArray<{
+                readonly node: {
+                    readonly id: string;
+                    readonly ' $fragmentRefs': FragmentRefs<'List_list'>;
+                } | null;
+            } | null> | null;
+        } | null;
     } | null;
 };
 export type ListsListQuery = {
@@ -21,19 +25,34 @@ export type ListsListQuery = {
 /*
 query ListsListQuery {
   viewer {
-    lists {
-      id
-      ...List_list
+    lists(first: 100) {
+      edges {
+        node {
+          id
+          ...List_list
+        }
+      }
     }
     id
   }
 }
 
 fragment List_list on List {
+  id
   name
-  tasks {
-    id
-    ...Task_task
+  tasks(first: 100) {
+    edges {
+      node {
+        id
+        ...Task_task
+        __typename
+      }
+      cursor
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
   }
 }
 
@@ -44,14 +63,21 @@ fragment Task_task on Task {
 */
 
 const node: ConcreteRequest = (function() {
-    var v0 = {
+    var v0 = [
+            {
+                kind: 'Literal',
+                name: 'first',
+                value: 100,
+            },
+        ],
+        v1 = {
             kind: 'ScalarField',
             alias: null,
             name: 'id',
             args: null,
             storageKey: null,
         },
-        v1 = {
+        v2 = {
             kind: 'ScalarField',
             alias: null,
             name: 'name',
@@ -80,16 +106,38 @@ const node: ConcreteRequest = (function() {
                             kind: 'LinkedField',
                             alias: null,
                             name: 'lists',
-                            storageKey: null,
-                            args: null,
-                            concreteType: 'List',
-                            plural: true,
+                            storageKey: 'lists(first:100)',
+                            args: v0 /*: any*/,
+                            concreteType: 'ListConnection',
+                            plural: false,
                             selections: [
-                                v0 /*: any*/,
                                 {
-                                    kind: 'FragmentSpread',
-                                    name: 'List_list',
+                                    kind: 'LinkedField',
+                                    alias: null,
+                                    name: 'edges',
+                                    storageKey: null,
                                     args: null,
+                                    concreteType: 'ListEdge',
+                                    plural: true,
+                                    selections: [
+                                        {
+                                            kind: 'LinkedField',
+                                            alias: null,
+                                            name: 'node',
+                                            storageKey: null,
+                                            args: null,
+                                            concreteType: 'List',
+                                            plural: false,
+                                            selections: [
+                                                v1 /*: any*/,
+                                                {
+                                                    kind: 'FragmentSpread',
+                                                    name: 'List_list',
+                                                    args: null,
+                                                },
+                                            ],
+                                        },
+                                    ],
                                 },
                             ],
                         },
@@ -115,36 +163,128 @@ const node: ConcreteRequest = (function() {
                             kind: 'LinkedField',
                             alias: null,
                             name: 'lists',
-                            storageKey: null,
-                            args: null,
-                            concreteType: 'List',
-                            plural: true,
+                            storageKey: 'lists(first:100)',
+                            args: v0 /*: any*/,
+                            concreteType: 'ListConnection',
+                            plural: false,
                             selections: [
-                                v0 /*: any*/,
-                                v1 /*: any*/,
                                 {
                                     kind: 'LinkedField',
                                     alias: null,
-                                    name: 'tasks',
+                                    name: 'edges',
                                     storageKey: null,
                                     args: null,
-                                    concreteType: 'Task',
+                                    concreteType: 'ListEdge',
                                     plural: true,
                                     selections: [
-                                        v0 /*: any*/,
-                                        v1 /*: any*/,
                                         {
-                                            kind: 'ScalarField',
+                                            kind: 'LinkedField',
                                             alias: null,
-                                            name: 'done',
-                                            args: null,
+                                            name: 'node',
                                             storageKey: null,
+                                            args: null,
+                                            concreteType: 'List',
+                                            plural: false,
+                                            selections: [
+                                                v1 /*: any*/,
+                                                v2 /*: any*/,
+                                                {
+                                                    kind: 'LinkedField',
+                                                    alias: null,
+                                                    name: 'tasks',
+                                                    storageKey: 'tasks(first:100)',
+                                                    args: v0 /*: any*/,
+                                                    concreteType: 'TaskConnection',
+                                                    plural: false,
+                                                    selections: [
+                                                        {
+                                                            kind: 'LinkedField',
+                                                            alias: null,
+                                                            name: 'edges',
+                                                            storageKey: null,
+                                                            args: null,
+                                                            concreteType: 'TaskEdge',
+                                                            plural: true,
+                                                            selections: [
+                                                                {
+                                                                    kind: 'LinkedField',
+                                                                    alias: null,
+                                                                    name: 'node',
+                                                                    storageKey: null,
+                                                                    args: null,
+                                                                    concreteType: 'Task',
+                                                                    plural: false,
+                                                                    selections: [
+                                                                        v1 /*: any*/,
+                                                                        v2 /*: any*/,
+                                                                        {
+                                                                            kind: 'ScalarField',
+                                                                            alias: null,
+                                                                            name: 'done',
+                                                                            args: null,
+                                                                            storageKey: null,
+                                                                        },
+                                                                        {
+                                                                            kind: 'ScalarField',
+                                                                            alias: null,
+                                                                            name: '__typename',
+                                                                            args: null,
+                                                                            storageKey: null,
+                                                                        },
+                                                                    ],
+                                                                },
+                                                                {
+                                                                    kind: 'ScalarField',
+                                                                    alias: null,
+                                                                    name: 'cursor',
+                                                                    args: null,
+                                                                    storageKey: null,
+                                                                },
+                                                            ],
+                                                        },
+                                                        {
+                                                            kind: 'LinkedField',
+                                                            alias: null,
+                                                            name: 'pageInfo',
+                                                            storageKey: null,
+                                                            args: null,
+                                                            concreteType: 'PageInfo',
+                                                            plural: false,
+                                                            selections: [
+                                                                {
+                                                                    kind: 'ScalarField',
+                                                                    alias: null,
+                                                                    name: 'endCursor',
+                                                                    args: null,
+                                                                    storageKey: null,
+                                                                },
+                                                                {
+                                                                    kind: 'ScalarField',
+                                                                    alias: null,
+                                                                    name: 'hasNextPage',
+                                                                    args: null,
+                                                                    storageKey: null,
+                                                                },
+                                                            ],
+                                                        },
+                                                    ],
+                                                },
+                                                {
+                                                    kind: 'LinkedHandle',
+                                                    alias: null,
+                                                    name: 'tasks',
+                                                    args: v0 /*: any*/,
+                                                    handle: 'connection',
+                                                    key: 'List_tasks',
+                                                    filters: null,
+                                                },
+                                            ],
                                         },
                                     ],
                                 },
                             ],
                         },
-                        v0 /*: any*/,
+                        v1 /*: any*/,
                     ],
                 },
             ],
@@ -154,10 +294,10 @@ const node: ConcreteRequest = (function() {
             name: 'ListsListQuery',
             id: null,
             text:
-                'query ListsListQuery {\n  viewer {\n    lists {\n      id\n      ...List_list\n    }\n    id\n  }\n}\n\nfragment List_list on List {\n  name\n  tasks {\n    id\n    ...Task_task\n  }\n}\n\nfragment Task_task on Task {\n  name\n  done\n}\n',
+                'query ListsListQuery {\n  viewer {\n    lists(first: 100) {\n      edges {\n        node {\n          id\n          ...List_list\n        }\n      }\n    }\n    id\n  }\n}\n\nfragment List_list on List {\n  id\n  name\n  tasks(first: 100) {\n    edges {\n      node {\n        id\n        ...Task_task\n        __typename\n      }\n      cursor\n    }\n    pageInfo {\n      endCursor\n      hasNextPage\n    }\n  }\n}\n\nfragment Task_task on Task {\n  name\n  done\n}\n',
             metadata: {},
         },
     };
 })();
-(node as any).hash = '88b8508da0c5e21d61457805f74e517b';
+(node as any).hash = '834d4b7c82ccc72e6bd3ab91018e2352';
 export default node;

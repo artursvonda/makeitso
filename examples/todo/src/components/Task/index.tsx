@@ -9,7 +9,7 @@ interface Props {
 
 const Task: FC<Props> = ({ task: { name, done } }) => (
     <div>
-        <input type="checkbox" checked={done} /> {name}
+        <input type="checkbox" readOnly checked={done} /> {name}
     </div>
 );
 

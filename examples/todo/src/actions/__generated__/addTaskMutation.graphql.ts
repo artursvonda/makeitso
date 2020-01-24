@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-/* @relayHash 4c58a0daa2f466ad20f33d889293777b */
+/* @relayHash 191baf979ef489f708d70ed04515f8ae */
 
 import { ConcreteRequest } from 'relay-runtime';
 export type addTaskMutationVariables = {
@@ -8,7 +8,12 @@ export type addTaskMutationVariables = {
 };
 export type addTaskMutationResponse = {
     readonly addTask: {
-        readonly name: string;
+        readonly task: {
+            readonly node: {
+                readonly id: string;
+                readonly name: string;
+            } | null;
+        } | null;
     };
 };
 export type addTaskMutation = {
@@ -21,8 +26,12 @@ mutation addTaskMutation(
   $name: String!
 ) {
   addTask(task: {name: $name}) {
-    name
-    id
+    task {
+      node {
+        id
+        name
+      }
+    }
   }
 }
 */
@@ -38,24 +47,65 @@ const node: ConcreteRequest = (function() {
         ],
         v1 = [
             {
-                kind: 'ObjectValue',
-                name: 'task',
-                fields: [
+                kind: 'LinkedField',
+                alias: null,
+                name: 'addTask',
+                storageKey: null,
+                args: [
                     {
-                        kind: 'Variable',
-                        name: 'name',
-                        variableName: 'name',
+                        kind: 'ObjectValue',
+                        name: 'task',
+                        fields: [
+                            {
+                                kind: 'Variable',
+                                name: 'name',
+                                variableName: 'name',
+                            },
+                        ],
+                    },
+                ],
+                concreteType: 'AddTaskPayload',
+                plural: false,
+                selections: [
+                    {
+                        kind: 'LinkedField',
+                        alias: null,
+                        name: 'task',
+                        storageKey: null,
+                        args: null,
+                        concreteType: 'TaskEdge',
+                        plural: false,
+                        selections: [
+                            {
+                                kind: 'LinkedField',
+                                alias: null,
+                                name: 'node',
+                                storageKey: null,
+                                args: null,
+                                concreteType: 'Task',
+                                plural: false,
+                                selections: [
+                                    {
+                                        kind: 'ScalarField',
+                                        alias: null,
+                                        name: 'id',
+                                        args: null,
+                                        storageKey: null,
+                                    },
+                                    {
+                                        kind: 'ScalarField',
+                                        alias: null,
+                                        name: 'name',
+                                        args: null,
+                                        storageKey: null,
+                                    },
+                                ],
+                            },
+                        ],
                     },
                 ],
             },
-        ],
-        v2 = {
-            kind: 'ScalarField',
-            alias: null,
-            name: 'name',
-            args: null,
-            storageKey: null,
-        };
+        ];
     return {
         kind: 'Request',
         fragment: {
@@ -64,54 +114,23 @@ const node: ConcreteRequest = (function() {
             type: 'Mutation',
             metadata: null,
             argumentDefinitions: v0 /*: any*/,
-            selections: [
-                {
-                    kind: 'LinkedField',
-                    alias: null,
-                    name: 'addTask',
-                    storageKey: null,
-                    args: v1 /*: any*/,
-                    concreteType: 'Task',
-                    plural: false,
-                    selections: [v2 /*: any*/],
-                },
-            ],
+            selections: v1 /*: any*/,
         },
         operation: {
             kind: 'Operation',
             name: 'addTaskMutation',
             argumentDefinitions: v0 /*: any*/,
-            selections: [
-                {
-                    kind: 'LinkedField',
-                    alias: null,
-                    name: 'addTask',
-                    storageKey: null,
-                    args: v1 /*: any*/,
-                    concreteType: 'Task',
-                    plural: false,
-                    selections: [
-                        v2 /*: any*/,
-                        {
-                            kind: 'ScalarField',
-                            alias: null,
-                            name: 'id',
-                            args: null,
-                            storageKey: null,
-                        },
-                    ],
-                },
-            ],
+            selections: v1 /*: any*/,
         },
         params: {
             operationKind: 'mutation',
             name: 'addTaskMutation',
             id: null,
             text:
-                'mutation addTaskMutation(\n  $name: String!\n) {\n  addTask(task: {name: $name}) {\n    name\n    id\n  }\n}\n',
+                'mutation addTaskMutation(\n  $name: String!\n) {\n  addTask(task: {name: $name}) {\n    task {\n      node {\n        id\n        name\n      }\n    }\n  }\n}\n',
             metadata: {},
         },
     };
 })();
-(node as any).hash = 'a2e29f324b382f5771f917196558ebb0';
+(node as any).hash = 'd869e12e1722d9fe6e0f513dd5ab4de6';
 export default node;

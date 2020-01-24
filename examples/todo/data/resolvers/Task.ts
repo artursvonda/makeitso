@@ -27,6 +27,6 @@ export const mutations: TaskMutations = {
         const task = { ...args.task, id: uuid.v4(), done: false };
         db.add('Task', task);
 
-        return task;
+        return { task: { node: task } };
     },
 };

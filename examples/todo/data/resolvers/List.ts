@@ -14,8 +14,16 @@ class List implements ListBase {
         return 'list Name';
     }
 
-    public tasks(): Task[] {
-        return this._tasks;
+    public tasks() {
+        return {
+            edges: this._tasks.map(node => ({ cursor: node.id, node })),
+            pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: false,
+                startCursor: '',
+                endCursor: '',
+            },
+        };
     }
 }
 

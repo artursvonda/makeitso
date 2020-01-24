@@ -9,9 +9,13 @@ const query = graphql`
     query ListsListQuery {
         # The root field for the query
         viewer {
-            lists {
-                id
-                ...List_list
+            lists(first: 100) {
+                edges {
+                    node {
+                        id
+                        ...List_list
+                    }
+                }
             }
         }
     }
@@ -30,7 +34,9 @@ const Lists = () => (
 
                 return <div>Err: {error.message}</div>;
             } else if (props && props.viewer) {
-                return props.viewer.lists.map(list => <List key={list.id} list={list} />);
+                return props.viewer.lists?.edges
+                    ?.filter(edge => !!edge?.node)
+                    .map(edge => <List key={edge!.node!.id} list={edge!.node!} />);
             }
 
             return <div>Loading</div>;
