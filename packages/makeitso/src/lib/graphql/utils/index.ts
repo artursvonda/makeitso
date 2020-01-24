@@ -2,6 +2,7 @@ import {
     DocumentNode,
     EnumTypeDefinitionNode,
     FieldDefinitionNode,
+    InterfaceTypeDefinitionNode,
     ListTypeNode,
     ObjectTypeDefinitionNode,
     parse,
@@ -13,48 +14,60 @@ import { TypeNode } from 'graphql/language/ast';
 import { map } from 'utils/dist/object';
 
 export interface Fields {
-    [key: string]: Field;
+    [key: string]: Types;
 }
 
 type ScalarTypes = 'string' | 'int' | 'float' | 'bool';
-type Types = ScalarTypes | 'array' | 'object' | 'unknown' | 'enum';
+type ResolvedTypes = ScalarTypes | 'array' | 'object' | 'unknown' | 'enum';
 
-interface FieldBase {
+interface Type {
     type: string;
     required: boolean;
+    resolvedType: unknown;
 }
 
-export interface ScalarField extends FieldBase {
+export interface ScalarType extends Type {
     resolvedType: ScalarTypes;
 }
 
-export interface CustomScalarField extends FieldBase {
+export interface CustomScalarType extends Type {
     resolvedType: 'unknown';
 }
 
-export interface EnumField extends FieldBase {
+export interface EnumType extends Type {
     resolvedType: 'enum';
-    children: string[];
+    values: string[];
 }
 
-export interface ArrayField extends FieldBase {
+export interface ArrayType extends Type {
     resolvedType: 'array';
-    children: Field;
+    children: Types;
 }
 
-export interface ObjectField extends FieldBase {
+export interface ObjectType extends Type {
     resolvedType: 'object';
-    children: Object;
+    fields: Fields;
 }
 
-export type Field = ScalarField | CustomScalarField | EnumField | ArrayField | ObjectField;
+export interface InterfaceType extends Type {
+    resolvedType: 'interface';
+    fields: Fields;
+}
+
+export type Types =
+    | ScalarType
+    | CustomScalarType
+    | EnumType
+    | ArrayType
+    | ObjectType
+    | InterfaceType;
 
 export type Object = {
     type: string;
     fields: Fields;
 };
 
-export type Structure = Record<string, Object>;
+export type Structure = Record<string, ObjectType | InterfaceType>;
 
 type TypeMap = typeof typeMap & { [key: string]: never };
 
@@ -67,7 +80,7 @@ const typeMap = {
     ListType: 'array',
 };
 
-const getResolvedType = (graphQlType: string, context: Context): Types =>
+const getResolvedType = (graphQlType: string, context: Context): ResolvedTypes =>
     (typeMap as TypeMap)[graphQlType] ||
     (graphQlType in context.enums ? 'enum' : graphQlType in context.scalars ? 'unknown' : 'object');
 
@@ -80,7 +93,7 @@ export const getGraphQlType = (type: TypeNode): string => {
     return unwrappedType.kind === 'NamedType' ? unwrappedType.name.value : 'ListType';
 };
 
-const getFieldStructure = (field: FieldDefinitionNode | ListTypeNode, context: Context): Field => {
+const getFieldStructure = (field: FieldDefinitionNode | ListTypeNode, context: Context): Types => {
     const required = field.type.kind === 'NonNullType';
     const type = getGraphQlType(field.type);
     const resolvedType = getResolvedType(type, context);
@@ -95,10 +108,10 @@ const getFieldStructure = (field: FieldDefinitionNode | ListTypeNode, context: C
             resolvedType,
             type,
             required,
-            children: context.enums[type].values?.map(value => value.name.value) ?? [],
+            values: context.enums[type].values?.map(value => value.name.value) ?? [],
         };
     } else if (resolvedType === 'object') {
-        return { resolvedType, type, required, children: {} as any };
+        return { resolvedType, type, required, fields: {} as any };
     } else {
         return { resolvedType, type, required };
     }
@@ -108,8 +121,26 @@ type Scalars = { [key: string]: ScalarTypeDefinitionNode };
 type Enums = { [key: string]: EnumTypeDefinitionNode };
 type Context = { scalars: Scalars; enums: Enums };
 
-const _getStructure = (definition: ObjectTypeDefinitionNode, context: Context): Object => ({
+const getObjectStructure = (
+    definition: ObjectTypeDefinitionNode,
+    context: Context,
+): ObjectType => ({
     type: definition.name.value,
+    resolvedType: 'object',
+    required: true,
+    fields: Object.fromEntries(
+        definition.fields?.map(field => [field.name.value, getFieldStructure(field, context)]) ??
+            ([] as [string, Object][]),
+    ),
+});
+
+const getInterfaceStructure = (
+    definition: InterfaceTypeDefinitionNode,
+    context: Context,
+): InterfaceType => ({
+    type: definition.name.value,
+    resolvedType: 'interface',
+    required: true,
     fields: Object.fromEntries(
         definition.fields?.map(field => [field.name.value, getFieldStructure(field, context)]) ??
             ([] as [string, Object][]),
@@ -132,24 +163,33 @@ export const getStructure = (body: string): Structure => {
 
     const context = { scalars, enums };
 
-    const objects = map(
-        getDefinitions<ObjectTypeDefinitionNode>(doc, 'ObjectTypeDefinition'),
-        definition => _getStructure(definition, context),
-    );
+    const types = {
+        ...map(
+            getDefinitions<InterfaceTypeDefinitionNode>(doc, 'InterfaceTypeDefinition'),
+            definition => getInterfaceStructure(definition, context),
+        ),
+        ...map(getDefinitions<ObjectTypeDefinitionNode>(doc, 'ObjectTypeDefinition'), definition =>
+            getObjectStructure(definition, context),
+        ),
+    };
 
-    Object.values(objects).forEach(structure => {
-        Object.values(structure.fields).forEach(field => {
-            if (
-                field.resolvedType === 'array' &&
-                field.children.resolvedType === 'object' &&
-                objects[field.children.type]
-            ) {
-                field.children.children = objects[field.children.type];
-            } else if (field.resolvedType === 'object' && objects[field.type]) {
-                field.children = objects[field.type];
-            }
-        });
+    Object.values(types).forEach(object => {
+        if (object.resolvedType === 'object') {
+            Object.values(object.fields).forEach(type => {
+                if (
+                    type.resolvedType === 'array' &&
+                    type.children.resolvedType === 'object' &&
+                    types[type.children.type]
+                ) {
+                    type.children = types[type.children.type];
+                } else if (type.resolvedType === 'object' && types[type.type]) {
+                    Object.assign(type, types[type.type]);
+                } else if (type.resolvedType === 'interface' && types[type.type]) {
+                    Object.assign(type, types[type.type]);
+                }
+            });
+        }
     });
 
-    return objects;
+    return types;
 };

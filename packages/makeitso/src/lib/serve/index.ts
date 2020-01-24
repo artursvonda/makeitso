@@ -7,6 +7,9 @@ import * as path from 'path';
 import { info } from 'utils/dist/debug';
 import { getResolver } from '../graphql/resolvers';
 import { getStructure } from '../graphql/utils';
+import initDebug from 'debug';
+
+const debug = initDebug('makeitso:serve');
 
 const { readFile } = promises;
 
@@ -30,27 +33,32 @@ Source: {green ${schemaFile}}
 Server: {green http://${host}:${port}/grqphql}`;
     const body = await readFile(schemaFile);
     const schemaInput = body.toString();
-    const schema = buildSchema(schemaInput);
+    try {
+        const schema = buildSchema(schemaInput);
 
-    const structure = getStructure(schemaInput);
+        const structure = getStructure(schemaInput);
 
-    const root = await getResolver(structure, { resolversDir });
+        const root = await getResolver(structure, { resolversDir });
 
-    const app = express();
-    app.use(cors());
+        const app = express();
+        app.use(cors());
 
-    app.use(
-        '/graphql',
-        graphqlHTTP({
-            schema: schema,
-            rootValue: root,
-            graphiql: true,
-        }),
-    );
+        app.use(
+            '/graphql',
+            graphqlHTTP({
+                schema: schema,
+                rootValue: root,
+                graphiql: true,
+            }),
+        );
 
-    const server = app.listen(port);
+        const server = app.listen(port);
 
-    return new Promise(resolve => {
-        server.on('close', resolve);
-    });
+        return new Promise(resolve => {
+            server.on('close', resolve);
+        });
+    } catch (e) {
+        console.error(e);
+        debug(e);
+    }
 };

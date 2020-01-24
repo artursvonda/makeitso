@@ -1,4 +1,4 @@
-import { getGraphQlType, getStructure, ObjectField } from './index';
+import { getGraphQlType, getStructure, ObjectType } from './index';
 
 describe('getStructure', () => {
     it('requires valid graphql schema', () => {
@@ -74,7 +74,7 @@ describe('getStructure', () => {
                         type: 'EnumValue',
                         resolvedType: 'enum',
                         required: false,
-                        children: ['One', 'Two'],
+                        values: ['One', 'Two'],
                     },
                 },
             },
@@ -141,11 +141,8 @@ describe('getStructure', () => {
                         type: 'Nested',
                         resolvedType: 'object',
                         required: true,
-                        children: {
-                            type: 'Nested',
-                            fields: {
-                                string: { type: 'String', resolvedType: 'string', required: true },
-                            },
+                        fields: {
+                            string: { type: 'String', resolvedType: 'string', required: true },
                         },
                     },
                 },
@@ -158,7 +155,7 @@ describe('getStructure', () => {
             type: 'Child',
             resolvedType: 'object',
             required: true,
-            children: {} as any,
+            fields: {} as any,
         };
 
         const Child = {
@@ -166,7 +163,7 @@ describe('getStructure', () => {
             fields: { child },
         };
 
-        child.children = Child;
+        child.fields = Child.fields;
 
         const structure = getStructure(`
                 type Child {
@@ -179,7 +176,59 @@ describe('getStructure', () => {
         // For some reason doesn't match when both Child and Query are present in object
         expect(structure).toMatchObject({ Child });
         expect(structure).toMatchObject({ Query: { ...Child, type: 'Query' } });
-        expect((structure.Query.fields.child as ObjectField).children).toMatchObject(Child);
+        expect((structure.Query as ObjectType).fields.child).toMatchObject(Child);
+    });
+
+    it('handles interfaces', () => {
+        expect(
+            getStructure(`
+                interface Node {
+                    id: ID!
+                }
+                
+                type Obj implements Node {
+                    id: ID!
+                }`),
+        ).toMatchObject({
+            Obj: {
+                fields: {
+                    id: {
+                        type: 'ID',
+                        resolvedType: 'string',
+                        required: true,
+                    },
+                },
+            },
+        });
+    });
+
+    it('handles interface return types', () => {
+        expect(
+            getStructure(`
+                interface Node {
+                    id: ID!
+                }
+                
+                type Query {
+                    node: Node!
+                }`),
+        ).toMatchObject({
+            Query: {
+                type: 'Query',
+                resolvedType: 'object',
+                required: true,
+                fields: {
+                    node: {
+                        type: 'Node',
+                        resolvedType: 'interface',
+                        required: true,
+                        fields: {
+                            id: { type: 'ID', resolvedType: 'string', required: true },
+                        },
+                    },
+                },
+            },
+        });
     });
 });
 

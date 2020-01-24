@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { map } from 'utils/dist/object';
 import uuid from 'uuid';
-import { Field, ObjectField, Fields, Structure } from '../utils';
+import { Types, ObjectType, Fields, Structure } from '../utils';
 
 type ScalarValue = string | number | boolean;
 type ResolvedValue = ScalarValue | ScalarValue[] | Resolver | Resolver[] | ObjectResolver | null;
@@ -11,8 +11,8 @@ type ObjectResolver = { [key: string]: Resolver };
 const getTypeModule = (type: string, dir: string) =>
     import(path.relative(__dirname, path.resolve(dir, type)));
 
-const getTypeResolver = async (field: ObjectField, context: Context) => {
-    const resolver = await getObjectResolver(field.children.fields, context);
+const getTypeResolver = async (field: ObjectType, context: Context) => {
+    const resolver = await getObjectResolver(field.fields, context);
     try {
         const module = await getTypeModule(field.type, context.resolversDir);
 
@@ -24,7 +24,7 @@ const getTypeResolver = async (field: ObjectField, context: Context) => {
     return () => resolver;
 };
 
-const getFieldMock = async (field: Field, context: Context): Promise<Resolver> => {
+const getFieldMock = async (field: Types, context: Context): Promise<Resolver> => {
     switch (field.resolvedType) {
         case 'string':
             const val = field.type === 'ID' ? uuid.v4() : 'string value';
@@ -37,7 +37,7 @@ const getFieldMock = async (field: Field, context: Context): Promise<Resolver> =
         case 'bool':
             return () => true;
         case 'enum':
-            return () => field.children[0];
+            return () => field.values[0];
         case 'object':
             return getTypeResolver(field, context);
         case 'array':
@@ -99,6 +99,10 @@ export const getResolver = async (
     structure: Structure,
     context: Context,
 ): Promise<ObjectResolver> => {
+    if (!structure.Query) {
+        throw new Error('Missing root Query');
+    }
+
     const [resolvers, mutations] = await Promise.all([
         getObjectResolver(structure.Query.fields, context),
         getMutations(structure, context),
