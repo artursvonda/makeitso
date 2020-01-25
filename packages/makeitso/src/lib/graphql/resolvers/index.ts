@@ -8,16 +8,23 @@ type ResolvedValue = ScalarValue | ScalarValue[] | Resolver | Resolver[] | Objec
 type Resolver = () => ResolvedValue;
 type ObjectResolver = { [key: string]: Resolver };
 
-const getTypeModule = (type: string, dir: string) =>
-    import(path.relative(__dirname, path.resolve(dir, type)));
+const getTypeModule = (type: string, dir: string) => {
+    let importPath = path.relative(__dirname, path.resolve(dir, type));
+    if (!importPath.startsWith('.') && !importPath.startsWith('/')) {
+        importPath = './' + importPath;
+    }
+
+    return import(importPath);
+};
 
 const getTypeResolver = async (field: ObjectType, context: Context) => {
     const resolver = await getObjectResolver(field.fields, context);
     try {
         const module = await getTypeModule(field.type, context.resolversDir);
+        const config = 'default' in module ? module.default : module;
 
-        if ('resolve' in module) {
-            return () => module.resolve(resolver, dbData);
+        if ('resolve' in config) {
+            return () => config.resolve(resolver, dbData);
         }
     } catch {}
 
