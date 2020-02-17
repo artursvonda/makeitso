@@ -1,12 +1,8 @@
 import * as path from 'path';
-import { map } from 'utils/dist/object';
-import uuid from 'uuid';
-import { Types, ObjectType, Fields, Structure } from '../utils';
-
-type ScalarValue = string | number | boolean;
-type ResolvedValue = ScalarValue | ScalarValue[] | Resolver | Resolver[] | ObjectResolver | null;
-type Resolver = () => ResolvedValue;
-type ObjectResolver = { [key: string]: Resolver };
+import { Database } from '../../database';
+import { Structure } from '../utils';
+import { Base } from './base';
+import { ObjectType } from './types';
 
 const getTypeModule = (type: string, dir: string) => {
     let importPath = path.relative(__dirname, path.resolve(dir, type));
@@ -17,103 +13,48 @@ const getTypeModule = (type: string, dir: string) => {
     return import(importPath);
 };
 
-const getTypeResolver = async (field: ObjectType, context: Context) => {
-    const resolver = await getObjectResolver(field.fields, context);
+const getCustomTypeResolver = async (field: ObjectType, context: Context): Promise<typeof Base> => {
     try {
         const module = await getTypeModule(field.type, context.resolversDir);
-        const config = 'default' in module ? module.default : module;
-
-        if ('resolve' in config) {
-            return () => config.resolve(resolver, dbData);
+        if ('default' in module) {
+            return module.default;
         }
     } catch {}
 
-    return () => resolver;
-};
-
-const getFieldMock = async (field: Types, context: Context): Promise<Resolver> => {
-    switch (field.resolvedType) {
-        case 'string':
-            const val = field.type === 'ID' ? uuid.v4() : 'string value';
-
-            return () => val;
-        case 'int':
-            return () => 123;
-        case 'float':
-            return () => 1.23;
-        case 'bool':
-            return () => true;
-        case 'enum':
-            return () => field.values[0];
-        case 'object':
-            return getTypeResolver(field, context);
-        case 'array':
-            const mockField = await getFieldMock(field.children, context);
-
-            return () => [mockField() as string];
-        case 'unknown':
-        default:
-            return () => {
-                throw new Error('unknown type');
-            };
-    }
+    return Base;
 };
 
 interface Context {
     resolversDir: string;
+    database: Database;
 }
 
-const getObjectResolver = async (obj: Fields, context: Context): Promise<ObjectResolver> => {
-    const resolvers = await Promise.all(
-        Object.entries(obj).map(async ([key, field]) => {
-            const mock = await getFieldMock(field, context);
+const getClasses = async (structure: Structure, context: Context) => {
+    const promises = Object.entries(structure)
+        .filter(([key, value]) => value.resolvedType === 'object')
+        .map(async ([key, value]) => {
+            const resolver = await getCustomTypeResolver(value as ObjectType, context);
 
-            return [key, mock];
-        }),
-    );
+            return [key, resolver] as const;
+        });
 
-    return Object.fromEntries(resolvers);
+    return Object.fromEntries(await Promise.all(promises));
 };
 
-const dbData: { [key: string]: unknown[] } = {};
-const db = {
-    add(type: string, value: unknown) {
-        dbData[type].push(value);
-    },
-};
-
-const getMutations = async (structure: Structure, context: Context): Promise<ObjectResolver> => {
-    const types = Object.keys(structure);
-    const mutations = await Promise.all(
-        types.map(async type => {
-            try {
-                const module = await getTypeModule(type, context.resolversDir);
-
-                if ('mutations' in module) {
-                    return map(module.mutations, fn => (input: unknown) => fn(db, input));
-                }
-            } catch {}
-
-            return {};
-        }),
-    );
-    Object.assign(dbData, ...types.map(type => ({ [type]: [] })));
-
-    return Object.assign({}, ...mutations);
-};
-
-export const getResolver = async (
-    structure: Structure,
-    context: Context,
-): Promise<ObjectResolver> => {
-    if (!structure.Query) {
+export const getResolver = async (structure: Structure, context: Context) => {
+    if (!structure.Query || structure.Query.resolvedType !== 'object') {
         throw new Error('Missing root Query');
     }
 
-    const [resolvers, mutations] = await Promise.all([
-        getObjectResolver(structure.Query.fields, context),
-        getMutations(structure, context),
-    ]);
+    const classes = await getClasses(structure, context);
+    const Query = classes.Query;
 
-    return { ...resolvers, ...mutations };
+    return new Query(
+        {},
+        {
+            db: context.database,
+            type: structure.Query,
+            classes,
+        },
+    );
 };

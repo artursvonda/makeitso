@@ -1,4 +1,5 @@
-import { getGraphQlType, getStructure, ObjectType } from './index';
+import { getGraphQlType, ObjectType } from '../resolvers/types';
+import { getStructure } from './index';
 
 describe('getStructure', () => {
     it('requires valid graphql schema', () => {
@@ -229,46 +230,5 @@ describe('getStructure', () => {
                 },
             },
         });
-    });
-});
-
-describe('getGraphQlType', () => {
-    it('returns type for simple NamedType', () => {
-        expect(getGraphQlType({ kind: 'NamedType', name: { kind: 'Name', value: 'String' } })).toBe(
-            'String',
-        );
-    });
-
-    it('returns type for NonNullType', () => {
-        expect(
-            getGraphQlType({
-                kind: 'NonNullType',
-                type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
-            }),
-        ).toBe('String');
-    });
-
-    it('returns type for ListType', () => {
-        expect(
-            getGraphQlType({
-                kind: 'ListType',
-                type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
-            }),
-        ).toBe('ListType');
-    });
-
-    it('returns type for NonNull ListType', () => {
-        expect(
-            getGraphQlType({
-                kind: 'NonNullType',
-                type: {
-                    kind: 'ListType',
-                    type: {
-                        kind: 'NonNullType',
-                        type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
-                    },
-                },
-            }),
-        ).toBe('ListType');
     });
 });

@@ -1,13 +1,14 @@
 import cors from 'cors';
+import initDebug from 'debug';
 import express from 'express';
 import graphqlHTTP from 'express-graphql';
 import { promises } from 'fs';
 import { buildSchema } from 'graphql';
 import * as path from 'path';
 import { info } from 'utils/dist/debug';
+import { initWithSamplesFromDir } from '../database/sampledb';
 import { getResolver } from '../graphql/resolvers';
 import { getStructure } from '../graphql/utils';
-import initDebug from 'debug';
 
 const debug = initDebug('makeitso:serve');
 
@@ -30,15 +31,16 @@ export default async ({
 Starting GrqphQL server
         
 Source: {green ${schemaFile}}
-Server: {green http://${host}:${port}/grqphql}`;
+Server: {green http://${host}:${port}/graphql}`;
     const body = await readFile(schemaFile);
     const schemaInput = body.toString();
     try {
         const schema = buildSchema(schemaInput);
 
         const structure = getStructure(schemaInput);
+        const database = await initWithSamplesFromDir(resolversDir);
 
-        const root = await getResolver(structure, { resolversDir });
+        const root = await getResolver(structure, { resolversDir, database });
 
         const app = express();
         app.use(cors());
