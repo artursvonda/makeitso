@@ -1,8 +1,3 @@
-#!/usr/bin/env node
+import { Base } from './lib/graphql/resolvers/base';
 
-import yargs from 'yargs';
-
-yargs
-    .commandDir('cmds')
-    .demandCommand()
-    .help().argv;
+export const Resolver = Base;
