@@ -28,7 +28,7 @@
         "makeitso-cli": "*",
         "prettier": "^1.19.1",
         "relay-compiler": "^8.0.0",
-        "relay-compiler-language-typescript": "^10.1.4",
+        "relay-compiler-language-typescript": "^11.0.0",
         "relay-config": "^8.0.0",
         "typescript": "~3.7.2"
     },

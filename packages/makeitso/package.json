@@ -26,8 +26,13 @@
         "express-graphql": "^0.9.0",
         "fast-glob": "^3.1.1",
         "graphql": "^14.5.8",
+        "make-dir": "^3.0.0",
+        "meow": "^6.0.0",
+        "semver": "^7.0.0",
+        "terser-webpack-plugin": "^2.0.0",
         "utils": "^0.1.0",
         "uuid": "^3.3.3",
+        "webpack": "^4.41.2",
         "yargs": "^15.1.0"
     },
     "devDependencies": {
