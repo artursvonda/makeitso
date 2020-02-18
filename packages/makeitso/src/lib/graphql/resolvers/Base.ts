@@ -16,7 +16,7 @@ interface Context {
     classes: { [key: string]: typeof Base };
 }
 
-export class Base<T extends object> {
+export class Base<T extends {}> {
     protected db: Database;
     protected context: Context;
     protected data: T;
@@ -47,10 +47,12 @@ export class Base<T extends object> {
                 if (type) {
                     if (type.resolvedType === 'object' && type.type in inst.context.classes) {
                         const entity = getEntity(type);
+
                         return (args: {}) => {
                             const fullArgs = { ...args, __typename: entity };
                             if (isArray) {
                                 const data = inst.db.find(fullArgs);
+
                                 return (data.length || !type.required ? data : [{} as Node]).map(
                                     item =>
                                         new inst.context.classes[type.type](item, {

@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { Database } from '../../database';
 import { Structure } from '../utils';
-import { Base } from './base';
+import { Base } from './Base';
 import { ObjectType } from './types';
 
 const getTypeModule = (type: string, dir: string) => {
