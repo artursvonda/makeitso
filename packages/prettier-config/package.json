@@ -4,5 +4,9 @@
   "description": "Prettier config for makeitso",
   "main": "index.js",
   "author": "Arturs Vonda <arturs@artursvonda.lv>",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^2.2.1"
+  },
+  "prettier": "./index.js"
 }
