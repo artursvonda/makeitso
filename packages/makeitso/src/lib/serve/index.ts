@@ -4,11 +4,9 @@ import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { promises } from 'fs';
 import { buildSchema } from 'graphql';
-import * as path from 'path';
+// import * as path from 'path';
 import { info } from 'utils/dist/debug';
-import { initWithSamplesFromDir } from '../database/sampledb';
-import { getResolver } from '../graphql/resolvers';
-import { getStructure } from '../graphql/utils';
+import resolveValue from '../graphql/resolve-value';
 
 const debug = initDebug('makeitso:serve');
 
@@ -23,7 +21,7 @@ interface Arguments {
 
 export default async ({
     schemaFile,
-    resolversDir = `${path.dirname(schemaFile)}/resolvers`,
+    // resolversDir = `${path.dirname(schemaFile)}/resolvers`,
     host = 'localhost',
     port = 4000,
 }: Arguments) => {
@@ -37,11 +35,6 @@ Server: {green http://${host}:${port}/graphql}`;
     try {
         const schema = buildSchema(schemaInput);
 
-        const structure = getStructure(schemaInput);
-        const database = await initWithSamplesFromDir(resolversDir);
-
-        const root = await getResolver(structure, { resolversDir, database });
-
         const app = express();
         app.use(cors());
 
@@ -49,8 +42,9 @@ Server: {green http://${host}:${port}/graphql}`;
             '/graphql',
             graphqlHTTP({
                 schema: schema,
-                rootValue: root,
+                rootValue: {},
                 graphiql: true,
+                fieldResolver: (parent, args, context, info) => resolveValue(info.returnType),
             }),
         );
 
