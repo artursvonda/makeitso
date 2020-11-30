@@ -25,7 +25,7 @@ describe('getResolver', () => {
         return execute(schema, document, resolver);
     };
 
-    it('resolves scalars', async done => {
+    it('resolves scalars', async (done) => {
         const source = `
             enum EnumValue {
                 ONE
@@ -61,7 +61,7 @@ describe('getResolver', () => {
         done();
     });
 
-    it('resolves Nested Objects', async done => {
+    it('resolves Nested Objects', async (done) => {
         const source = `
             type Nested {
                 string: String!
@@ -89,7 +89,7 @@ describe('getResolver', () => {
         done();
     });
 
-    it('looks for custom type resolvers', async done => {
+    it('looks for custom type resolvers', async (done) => {
         const source = `
             type Nested {
                 string: String!
@@ -117,7 +117,7 @@ describe('getResolver', () => {
         done();
     });
 
-    it('accepts arguments', async done => {
+    it('accepts arguments', async (done) => {
         const source = `
             type Query {
                 get(arg: String!): String!
@@ -137,7 +137,7 @@ describe('getResolver', () => {
         done();
     });
 
-    it('accepts arguments in nested object', async done => {
+    it('accepts arguments in nested object', async (done) => {
         const source = `
             type Nested {
                 get(arg: String!): String!
@@ -165,7 +165,7 @@ describe('getResolver', () => {
         done();
     });
 
-    it('gives access to database', async done => {
+    it('gives access to database', async (done) => {
         const source = `
             type Obj {
                 id: ID!

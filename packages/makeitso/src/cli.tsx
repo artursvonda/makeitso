@@ -2,7 +2,4 @@
 
 import yargs from 'yargs';
 
-yargs
-    .commandDir('cmds')
-    .demandCommand()
-    .help().argv;
+yargs.commandDir('cmds').demandCommand().help().argv;

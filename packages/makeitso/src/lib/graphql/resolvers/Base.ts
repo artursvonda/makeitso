@@ -54,7 +54,7 @@ export class Base<T extends {}> {
                                 const data = inst.db.find(fullArgs);
 
                                 return (data.length || !type.required ? data : [{} as Node]).map(
-                                    item =>
+                                    (item) =>
                                         new inst.context.classes[type.type](item, {
                                             ...inst.context,
                                             type,

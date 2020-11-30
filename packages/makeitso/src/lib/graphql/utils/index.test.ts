@@ -1,4 +1,4 @@
-import { getGraphQlType, ObjectType } from '../resolvers/types';
+import { ObjectType } from '../resolvers/types';
 import { getStructure } from './index';
 
 describe('getStructure', () => {
@@ -8,13 +8,14 @@ describe('getStructure', () => {
 
     it('returns basic types', () => {
         expect(
-            getStructure(`
-                    type Query {
-                        string: String!
-                        int: Int!
-                        float: Float!
-                        bool: Boolean!
-                    }`),
+            getStructure(/* GraphQL */ `
+                type Query {
+                    string: String!
+                    int: Int!
+                    float: Float!
+                    bool: Boolean!
+                }
+            `),
         ).toMatchObject({
             Query: {
                 fields: {
@@ -29,10 +30,11 @@ describe('getStructure', () => {
 
     it('handles optional types', () => {
         expect(
-            getStructure(`
-                    type Query {
-                        string: String
-                    }`),
+            getStructure(/* GraphQL */ `
+                type Query {
+                    string: String
+                }
+            `),
         ).toMatchObject({
             Query: {
                 fields: { string: { type: 'String', resolvedType: 'string', required: false } },
@@ -42,12 +44,13 @@ describe('getStructure', () => {
 
     it('handles scalar values', () => {
         expect(
-            getStructure(`
-                    scalar ScalarType
+            getStructure(/* GraphQL */ `
+                scalar ScalarType
 
-                    type Query {
-                        string: ScalarType
-                    }`),
+                type Query {
+                    string: ScalarType
+                }
+            `),
         ).toMatchObject({
             Query: {
                 fields: {
@@ -59,15 +62,16 @@ describe('getStructure', () => {
 
     it('handles enum values', () => {
         expect(
-            getStructure(`
-                    enum EnumValue {
-                        One
-                        Two
-                    }
+            getStructure(/* GraphQL */ `
+                enum EnumValue {
+                    One
+                    Two
+                }
 
-                    type Query {
-                        string: EnumValue
-                    }`),
+                type Query {
+                    string: EnumValue
+                }
+            `),
         ).toMatchObject({
             Query: {
                 fields: {
@@ -84,10 +88,11 @@ describe('getStructure', () => {
 
     it('handles array types', () => {
         expect(
-            getStructure(`
-                    type Query {
-                        string: [String]
-                    }`),
+            getStructure(/* GraphQL */ `
+                type Query {
+                    string: [String]
+                }
+            `),
         ).toMatchObject({
             Query: {
                 fields: {
@@ -102,10 +107,11 @@ describe('getStructure', () => {
         });
 
         expect(
-            getStructure(`
-                    type Query {
-                        string: [String!]!
-                    }`),
+            getStructure(/* GraphQL */ `
+                type Query {
+                    string: [String!]!
+                }
+            `),
         ).toMatchObject({
             Query: {
                 fields: {
@@ -122,14 +128,15 @@ describe('getStructure', () => {
 
     it('handles nested structures', () => {
         expect(
-            getStructure(`
-                    type Nested {
-                        string: String!
-                    }
+            getStructure(/* GraphQL */ `
+                type Nested {
+                    string: String!
+                }
 
-                    type Query {
-                        nested: Nested!
-                    }`),
+                type Query {
+                    nested: Nested!
+                }
+            `),
         ).toMatchObject({
             Nested: {
                 fields: {
@@ -166,14 +173,15 @@ describe('getStructure', () => {
 
         child.fields = Child.fields;
 
-        const structure = getStructure(`
-                type Child {
-                    child: Child!
-                }
+        const structure = getStructure(/* GraphQL */ `
+            type Child {
+                child: Child!
+            }
 
-                type Query {
-                    child: Child!
-                }`);
+            type Query {
+                child: Child!
+            }
+        `);
         // For some reason doesn't match when both Child and Query are present in object
         expect(structure).toMatchObject({ Child });
         expect(structure).toMatchObject({ Query: { ...Child, type: 'Query' } });
@@ -182,14 +190,15 @@ describe('getStructure', () => {
 
     it('handles interfaces', () => {
         expect(
-            getStructure(`
+            getStructure(/* GraphQL */ `
                 interface Node {
                     id: ID!
                 }
-                
+
                 type Obj implements Node {
                     id: ID!
-                }`),
+                }
+            `),
         ).toMatchObject({
             Obj: {
                 fields: {
@@ -205,14 +214,15 @@ describe('getStructure', () => {
 
     it('handles interface return types', () => {
         expect(
-            getStructure(`
+            getStructure(/* GraphQL */ `
                 interface Node {
                     id: ID!
                 }
-                
+
                 type Query {
                     node: Node!
-                }`),
+                }
+            `),
         ).toMatchObject({
             Query: {
                 type: 'Query',

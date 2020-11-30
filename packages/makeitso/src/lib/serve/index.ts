@@ -56,7 +56,7 @@ Server: {green http://${host}:${port}/graphql}`;
 
         const server = app.listen(port);
 
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             server.on('close', resolve);
         });
     } catch (e) {

@@ -11,7 +11,7 @@ export const command = 'build [env]';
 
 export const desc = 'Build environment';
 
-export const builder: BuilderCallback<Arguments, {}> = yargs => {
+export const builder: BuilderCallback<Arguments, {}> = (yargs) => {
     yargs.default('env', 'dev', 'Environment');
     yargs.option('input', { default: 'data/schema.graphql' });
 };

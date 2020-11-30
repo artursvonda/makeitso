@@ -46,7 +46,7 @@ const getFieldStructure = (field: FieldDefinitionNode | ListTypeNode, context: C
         case 'enum':
             return enumType(
                 type,
-                context.enums[type].values?.map(value => value.name.value) ?? [],
+                context.enums[type].values?.map((value) => value.name.value) ?? [],
                 required,
             );
         case 'object':
@@ -70,7 +70,7 @@ const getObjectStructure = (definition: ObjectTypeDefinitionNode, context: Conte
     objectType(
         definition.name.value,
         Object.fromEntries(
-            definition.fields?.map(field => [
+            definition.fields?.map((field) => [
                 field.name.value,
                 getFieldStructure(field, context),
             ]) ?? [],
@@ -81,7 +81,7 @@ const getInterfaceStructure = (definition: InterfaceTypeDefinitionNode, context:
     interfaceType(
         definition.name.value,
         Object.fromEntries(
-            definition.fields?.map(field => [
+            definition.fields?.map((field) => [
                 field.name.value,
                 getFieldStructure(field, context),
             ]) ?? [],
@@ -92,7 +92,7 @@ const getDefinitions = <T extends TypeDefinitionNode>(doc: DocumentNode, kind: T
     Object.fromEntries(
         doc.definitions
             .filter((definition): definition is T => definition.kind === kind)
-            .map(definition => [definition.name.value, definition]),
+            .map((definition) => [definition.name.value, definition]),
     );
 
 export const getStructure = (body: string): Structure => {
@@ -107,16 +107,17 @@ export const getStructure = (body: string): Structure => {
     const types = {
         ...map(
             getDefinitions<InterfaceTypeDefinitionNode>(doc, 'InterfaceTypeDefinition'),
-            definition => getInterfaceStructure(definition, context),
+            (definition) => getInterfaceStructure(definition, context),
         ),
-        ...map(getDefinitions<ObjectTypeDefinitionNode>(doc, 'ObjectTypeDefinition'), definition =>
-            getObjectStructure(definition, context),
+        ...map(
+            getDefinitions<ObjectTypeDefinitionNode>(doc, 'ObjectTypeDefinition'),
+            (definition) => getObjectStructure(definition, context),
         ),
     };
 
-    Object.values(types).forEach(object => {
+    Object.values(types).forEach((object) => {
         if (object.resolvedType === 'object') {
-            Object.values(object.fields).forEach(type => {
+            Object.values(object.fields).forEach((type) => {
                 if (
                     type.resolvedType === 'array' &&
                     type.children.resolvedType === 'object' &&

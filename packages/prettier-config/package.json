@@ -5,6 +5,9 @@
   "main": "index.js",
   "author": "Arturs Vonda <arturs@artursvonda.lv>",
   "license": "MIT",
+  "scripts": {
+    "lint-fix": "prettier --write *.js"
+  },
   "devDependencies": {
     "prettier": "^2.2.1"
   },

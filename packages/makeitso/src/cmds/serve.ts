@@ -11,7 +11,7 @@ export const command = 'serve';
 
 export const desc = 'Serves environment';
 
-export const builder: BuilderCallback<Arguments, {}> = yargs => {
+export const builder: BuilderCallback<Arguments, {}> = (yargs) => {
     yargs.option('input', { default: 'data/schema.graphql' });
 };
 

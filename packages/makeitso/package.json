@@ -13,6 +13,7 @@
     "scripts": {
         "build": "yarn tsc",
         "watch": "yarn tsc --watch",
+        "lint-fix": "prettier --write src  *.js *.json",
         "test": "jest"
     },
     "engines": {

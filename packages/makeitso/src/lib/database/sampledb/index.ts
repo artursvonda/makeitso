@@ -3,9 +3,9 @@ import * as path from 'path';
 import { Database, Node } from '../interface';
 
 export const initWithSamplesFromDir = async (cwd: string) => {
-    const files = await glob('**/*.samples.{json,js}', { cwd, absolute: true });
+    const files = await glob('**/*.samples.{json,js,ts}', { cwd, absolute: true });
     const samplesContent = await Promise.all(
-        files.map(async file => {
+        files.map(async (file) => {
             const fileSamples = (await import(file)).default;
             const type = path.basename(file).replace(/\.samples\.js(on)?/, '');
 
@@ -28,11 +28,11 @@ export class SampleDatabase implements Database {
     }
 
     public findById(id: string) {
-        return this.samples.find(sample => sample.id === id);
+        return this.samples.find((sample) => sample.id === id);
     }
 
     public find(args: Record<string, unknown> = {}): Node[] {
-        return this.samples.filter(sample => isMatchingArgs(sample, args));
+        return this.samples.filter((sample) => isMatchingArgs(sample, args));
     }
 
     public findOne(args: Record<string, unknown>): Node | undefined {
