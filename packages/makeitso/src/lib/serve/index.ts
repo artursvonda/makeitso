@@ -1,7 +1,7 @@
 import cors from 'cors';
 import initDebug from 'debug';
 import express from 'express';
-import graphqlHTTP from 'express-graphql';
+import { graphqlHTTP } from 'express-graphql';
 import { promises } from 'fs';
 import { buildSchema } from 'graphql';
 import * as path from 'path';
