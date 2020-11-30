@@ -28,7 +28,7 @@ export default async ({
     port = 4000,
 }: Arguments) => {
     info`
-Starting GrqphQL server
+Starting GraphQL server
         
 Source: {green ${schemaFile}}
 Server: {green http://${host}:${port}/graphql}`;
