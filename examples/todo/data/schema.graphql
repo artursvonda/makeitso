@@ -1,0 +1,12 @@
+type Query {
+    lists: [List!]!
+}
+
+type List {
+    name: String!
+    tasks: [Task!]!
+}
+
+type Task {
+    task: String!
+}

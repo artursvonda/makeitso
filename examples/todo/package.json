@@ -1,0 +1,29 @@
+{
+    "name": "makeitso-example-todo",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {},
+    "devDependencies": {
+        "makeitso-cli": "*",
+        "prettier": "^2.2.1"
+    },
+    "scripts": {
+        "server": "makeitso serve"
+    },
+    "eslintConfig": {
+        "extends": "react-app"
+    },
+    "prettier": "makeitso-prettier-config",
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    }
+}
