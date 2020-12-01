@@ -5,7 +5,7 @@ import { graphqlHTTP } from 'express-graphql';
 import { promises } from 'fs';
 import { buildSchema } from 'graphql';
 import * as path from 'path';
-import { info } from 'utils/dist/debug';
+import { info } from '../../utils';
 import getTypeResolvers from '../graphql/get-type-resolvers';
 import fieldResolver from '../graphql/field-resolver';
 

@@ -1,3 +1,4 @@
+import { error } from '../utils';
 import { BuilderCallback } from 'yargs';
 import serve from '../lib/serve';
 import { resolve } from 'path';
@@ -21,7 +22,9 @@ export const handler = async (argv: Arguments) => {
         await serve({ schemaFile: input });
 
         process.exit(0);
-    } catch {
+    } catch (e) {
+        error(e.message);
+
         process.exit(1);
     }
 };
