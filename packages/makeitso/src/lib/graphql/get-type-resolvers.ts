@@ -1,15 +1,16 @@
 import glob from 'fast-glob';
-import { GraphQLFieldResolver, defaultFieldResolver } from 'graphql';
 import * as path from 'path';
-import resolveValue from './resolve-value';
-
-type Resolver = unknown;
+import { Resolver } from './types';
 
 interface Options {
     resolversDir: string;
 }
 
-export default async (options: Options): Promise<GraphQLFieldResolver<unknown, unknown>> => {
+type Resolvers = {
+    [key: string]: Resolver;
+};
+
+export default async (options: Options): Promise<Resolvers> => {
     const files = await glob('*.{ts,js}', {
         cwd: options.resolversDir,
         onlyFiles: true,
@@ -26,13 +27,6 @@ export default async (options: Options): Promise<GraphQLFieldResolver<unknown, u
             throw new Error('Resolver modules should export as default');
         }),
     );
-    const resolvers = Object.fromEntries(modules);
 
-    return (parent, args, context, info) => {
-        if (parent && typeof parent === 'object' && info.fieldName in parent) {
-            return defaultFieldResolver(parent, args, context, info);
-        }
-
-        return resolveValue(info.returnType, parent, args, { resolvers });
-    };
+    return Object.fromEntries(modules);
 };

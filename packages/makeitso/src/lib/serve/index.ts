@@ -6,7 +6,8 @@ import { promises } from 'fs';
 import { buildSchema } from 'graphql';
 import * as path from 'path';
 import { info } from 'utils/dist/debug';
-import getFieldResolver from '../graphql/get-field-resolver';
+import getTypeResolvers from '../graphql/get-type-resolvers';
+import fieldResolver from '../graphql/field-resolver';
 
 const debug = initDebug('makeitso:serve');
 
@@ -38,7 +39,7 @@ Server: {green http://${host}:${port}/graphql}`;
         const app = express();
         app.use(cors());
 
-        const fieldResolver = await getFieldResolver({ resolversDir });
+        const resolvers = await getTypeResolvers({ resolversDir });
 
         app.use(
             '/graphql',
@@ -46,6 +47,7 @@ Server: {green http://${host}:${port}/graphql}`;
                 schema: schema,
                 rootValue: {},
                 graphiql: true,
+                context: { resolvers },
                 fieldResolver,
             }),
         );
