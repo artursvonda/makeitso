@@ -7,7 +7,7 @@ interface Arguments {
     input: string;
 }
 
-export const command = 'serve';
+export const command = ['serve', '$0'];
 
 export const desc = 'Serves environment';
 
